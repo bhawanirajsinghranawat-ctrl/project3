@@ -1,0 +1,7 @@
+services:
+  web:
+    image: ${IMAGE_NAME:-devops-app:latest}
+    container_name: devops-app
+    ports:
+      - "80:80"
+    restart: unless-stopped
