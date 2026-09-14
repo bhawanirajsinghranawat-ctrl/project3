@@ -1,11 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKERHUB_USER = 'bhawani608'
-        DEV_IMAGE = 'bhawani608/project3-dev:latest'
-    }
-
     stages {
 
         stage('Checkout') {
@@ -22,19 +17,8 @@ pipeline {
             }
         }
 
-        stage('Tag Docker Image') {
+        stage('Docker Login') {
             steps {
-                echo 'Tagging image for Docker Hub...'
-                sh '''
-                    docker tag devops-app:latest ${DEV_IMAGE}
-                '''
-            }
-        }
-
-        stage('Push to Docker Hub - DEV') {
-            steps {
-                echo 'Pushing DEV image to Docker Hub...'
-
                 withCredentials([
                     usernamePassword(
                         credentialsId: 'dockerhub-credentials',
@@ -44,21 +28,51 @@ pipeline {
                 ]) {
                     sh '''
                         echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USER}" --password-stdin
-                        docker push ${DEV_IMAGE}
-                        docker logout
                     '''
                 }
+            }
+        }
+
+        stage('Push DEV Image') {
+            when {
+                branch 'dev'
+            }
+            steps {
+                echo 'Pushing DEV image...'
+                sh '''
+                    docker tag devops-app:latest bhawani608/project3-dev:latest
+                    docker push bhawani608/project3-dev:latest
+                '''
+            }
+        }
+
+        stage('Push PROD Image') {
+            when {
+                branch 'master'
+            }
+            steps {
+                echo 'Pushing PROD image...'
+                sh '''
+                    docker tag devops-app:latest bhawani608/project3-prod:latest
+                    docker push bhawani608/project3-prod:latest
+                '''
+            }
+        }
+
+        stage('Docker Logout') {
+            steps {
+                sh 'docker logout'
             }
         }
     }
 
     post {
         success {
-            echo 'DEV deployment pipeline completed successfully.'
+            echo "Pipeline completed successfully for branch: ${env.BRANCH_NAME}"
         }
 
         failure {
-            echo 'DEV pipeline failed.'
+            echo "Pipeline failed for branch: ${env.BRANCH_NAME}"
         }
     }
 }
