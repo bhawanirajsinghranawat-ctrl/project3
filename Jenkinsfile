@@ -59,6 +59,22 @@ pipeline {
             }
         }
 
+        stage('Deploy to App EC2') {
+            when {
+                branch 'master'
+            }
+            steps {
+                echo 'Deploying production application to App EC2...'
+
+                sshagent(credentials: ['app-server-ssh']) {
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no ubuntu@172.31.8.46 \
+                        'cd ~/devops-build && git checkout master && git pull origin master && chmod +x deploy.sh && ./deploy.sh'
+                    '''
+                }
+            }
+        }
+
         stage('Docker Logout') {
             steps {
                 sh 'docker logout'
