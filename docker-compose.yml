@@ -1,7 +1,0 @@
-services:
-  web:
-    image: ${IMAGE_NAME:-bhawani608/project3-dev:latest}
-    container_name: devops-app
-    ports:
-      - "80:80"
-    restart: unless-stopped
